@@ -1,8 +1,10 @@
-from flask import Flask, jsonify, request
+from flask import Flask, request
+from flask_restful import Resource, Api
+from habilidades import Habilidades
 import json
 
 app = Flask(__name__)
-
+api = Api(app)
 developers = [
     {'id': '0',
      'nome': 'Robson',
@@ -14,10 +16,8 @@ developers = [
 ]
 
 
-@app.route('/dev/<int:id>/', methods=['GET', 'PUT','DELETE'])
-def developer(id):
-
-    if request.method == 'GET':
+class Desenvolvedor(Resource):
+    def get(self, id):
         try:
             response = developer = developers[id]
         except IndexError:
@@ -26,30 +26,32 @@ def developer(id):
         except Exception:
             mensagem = 'Erro descoconhecido. Contate o Administrador da API'
             response = {'status': 'Erro', 'mensagem': mensagem}
-        return jsonify(response)
+        return response
 
-    elif request.method == 'PUT':
-        dados = json.loads(request.data)
-        developers[id] = dados
-        return jsonify(dados)
+    def put(self):
+        pass
 
-    elif request.method == 'DELETE':
+    def delete(self,id):
         developers.pop(id)
-        return jsonify({'status': 'Sucess', 'mensagem': 'Registro deletado'})
+        return {'status': 'Sucess', 'mensagem': 'Registro deletado'}
+        pass
 
 
-#Inserir um novo dev e consultar todos devs
-@app.route('/dev/', methods=['POST', 'GET'])
-def list_developer():
-    if request.method == 'POST':
+class ListaDevelopers(Resource):
+    def get(self):
+        return developers
+
+    def post(self):
         dados = json.loads(request.data)
         posicao = len(developers)
         dados['id'] = posicao
         developers.append(dados)
-        return jsonify(developers[posicao])
+        return developers[posicao]
 
-    elif request.method == 'GET':
-        return jsonify(developers)
+
+api.add_resource(Desenvolvedor, '/dev/<int:id>/')
+api.add_resource(ListaDevelopers, '/dev/')
+api.add_resource(Habilidades, '/skill/')
 
 
 if __name__ == '__main__':
